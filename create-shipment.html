@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Shipment | WAB Admin</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background: linear-gradient(rgba(0,0,0,.85), rgba(0,0,0,.85)),
+      url('https://images.unsplash.com/photo-1553413077-190dd305871c');
+      background-size: cover;
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding-top: 70px;
+    }
+    .card {
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-7">
+
+      <h4 class="text-white mb-3">Create New Shipment</h4>
+
+      <div class="card p-4">
+        <form id="shipmentForm">
+
+          <div class="mb-3">
+            <label class="fw-bold">Tracking Number</label>
+            <input type="text" id="newTracking" class="form-control" required>
+            <button type="button" class="btn btn-link p-0 mt-1" onclick="generateTracking()">Generate Random</button>
+          </div>
+
+          <div class="mb-3">
+            <label class="fw-bold">Weight (KG)</label>
+            <input type="number" step="0.01" id="newWeight" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label class="fw-bold">Origin</label>
+            <input type="text" id="newOrigin" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="fw-bold">Destination</label>
+            <input type="text" id="newDest" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="fw-bold">Sender</label>
+            <input type="text" id="newSender" class="form-control">
+          </div>
+
+          <div class="mb-4">
+            <label class="fw-bold">Receiver</label>
+            <input type="text" id="newReceiver" class="form-control">
+          </div>
+
+          <button id="submitBtn" type="submit" class="btn btn-dark w-100">
+            <i class="fas fa-paper-plane me-2"></i>Create Shipment
+          </button>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // 🔑 Supabase
+  
+  const SUPABASE_URL = "https://pfgyfljvysxqsvuiehez.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZ3lmbGp2eXN4cXN2dWllaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MTcyNTMsImV4cCI6MjA4Mzk5MzI1M30.hIt_dGYpiQuKt_LJAfIZlBtnpY6HTt2Dn8xq1gRAXJU";
+  
+// Replace your current declaration with this
+if (typeof supabaseClient === 'undefined') {
+    var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
+// Update all following references from 'supabase' to 'supabaseClient'
+
+
+  // 🔐 Auth check
+  async function checkSession() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = "login.html";
+    } else {
+      isAuthed = true;
+    }
+  }
+
+  checkSession();
+
+  // 🎯 Tracking generator
+  function generateTracking() {
+    document.getElementById("newTracking").value =
+      "WAB-" + Math.floor(100000 + Math.random() * 900000);
+  }
+
+  // 🧠 Submit handler
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("shipmentForm").addEventListener("submit", createShipment);
+  });
+
+  async function createShipment(e) {
+    e.preventDefault();
+    if (!isAuthed) return;
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Processing...";
+
+    const tracking = newTracking.value.trim();
+    const origin = newOrigin.value.trim();
+
+    // Check duplicate
+    const { data: existing } = await supabaseClient
+      .from("shipments")
+      .select("id")
+      .eq("tracking_number", tracking)
+      .maybeSingle();
+
+    if (existing) {
+      alert("Tracking number already exists");
+      reset();
+      return;
+    }
+
+    const payload = {
+      tracking_number: tracking,
+      origin,
+      destination: newDest.value.trim(),
+      sender_name: newSender.value || "WAB Cargo",
+      receiver_name: newReceiver.value || "Customer",
+      weight: parseFloat(newWeight.value) || 1,
+      status: "Picked Up",
+      current_location: origin
+    };
+
+    const { error } = await supabaseClient.from("shipments").insert(payload);
+    if (error) {
+      alert(error.message);
+      reset();
+      return;
+    }
+
+    await supabaseClient.from("shipment_events").insert({
+      tracking_number: tracking,
+      location: origin,
+      status: "Picked Up",
+      details: "Shipment created"
+    });
+
+    alert("Shipment created successfully");
+    window.location.href = "admins.html";
+
+    function reset() {
+      btn.disabled = false;
+      btn.innerHTML = "Create Shipment";
+    }
+  }
+</script>
+
+</body>
+</html>

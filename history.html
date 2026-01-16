@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Trail | WAB Cargo</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { 
+            /* Same Premium Background */
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 40px 0; 
+            font-family: 'Inter', sans-serif; 
+            color: #333; 
+        }
+        
+        /* GLASS DOCUMENT */
+        .audit-paper {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 800px; 
+            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 800px;
+            position: relative;
+        }
+
+        /* HEADER */
+        .header { 
+            background: #111; 
+            color: white; 
+            padding: 35px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 4px solid #333;
+        }
+        .wab-title { font-family: 'Oswald', sans-serif; font-size: 2.5rem; line-height: 1; letter-spacing: -1px; }
+        .report-name { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; font-weight: 600; }
+
+        /* INFO GRID */
+        .info-section { padding: 30px; background: rgba(240, 240, 240, 0.6); border-bottom: 1px solid #ddd; }
+        .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #777; letter-spacing: 1px; margin-bottom: 4px; }
+        .value { font-size: 1.2rem; font-weight: 700; color: #000; font-family: 'Oswald', sans-serif; }
+
+        /* TABLE */
+        .table-container { padding: 30px; }
+        .history-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .history-table th { 
+            background: #222; 
+            color: #ccc; 
+            padding: 12px 15px; 
+            text-transform: uppercase; 
+            font-size: 0.7rem; 
+            text-align: left; 
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .history-table th:first-child { border-top-left-radius: 6px; }
+        .history-table th:last-child { border-top-right-radius: 6px; }
+        
+        .history-table td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; background: white; }
+        .history-table tr:last-child td { border-bottom: none; }
+        
+        /* STATUS BADGES */
+        .status-dot { height: 10px; width: 10px; background: #000; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-cell { font-weight: 700; color: #111; }
+
+        /* FOOTER */
+        .footer { padding: 30px; text-align: center; font-size: 0.75rem; color: #666; border-top: 1px solid #eee; margin-top: auto; background: #f9f9f9; }
+
+        /* PRINT */
+        @media print {
+            body { background: white; padding: 0; }
+            .audit-paper { 
+                box-shadow: none; border: 1px solid #000; border-radius: 0; 
+                max-width: 100%; margin: 0; min-height: 100vh;
+            }
+            .no-print { display: none !important; }
+            .header { background: white; color: black; border-bottom: 2px solid black; }
+            .history-table th { background: #eee; color: black; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-center mb-4 no-print">
+        <button onclick="window.print()" class="btn btn-light fw-bold shadow"><i class="fas fa-print me-2"></i> PRINT REPORT</button>
+        <button onclick="window.close()" class="btn btn-outline-light ms-2">CLOSE</button>
+    </div>
+
+    <div class="audit-paper">
+        <div class="header">
+            <div>
+                <div class="wab-title">WAB</div>
+                <div class="small opacity-75">Cargo & Logistics Services</div>
+            </div>
+            <div class="text-end">
+                <div class="report-name">Transaction History</div>
+                <div class="small opacity-50">OFFICIAL AUDIT LOG</div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="row">
+                <div class="col-4 border-end border-secondary-subtle">
+                    <div class="label">Tracking Number</div>
+                    <div class="value" id="trkDisplay">...</div>
+                </div>
+                <div class="col-4 border-end border-secondary-subtle ps-4">
+                    <div class="label">Current Status</div>
+                    <div class="value text-primary" id="statusDisplay">...</div>
+                </div>
+                <div class="col-4 text-end">
+                    <div class="label">Report Generated</div>
+                    <div class="value" id="reportDate">...</div>
+                </div>
+            </div>
+            <hr class="my-4 opacity-25">
+            <div class="row">
+                <div class="col-6">
+                    <div class="label">Origin Point</div>
+                    <div class="fw-bold fs-5" id="originDisplay">...</div>
+                </div>
+                <div class="col-6 text-end">
+                    <div class="label">Final Destination</div>
+                    <div class="fw-bold fs-5" id="destDisplay">...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th width="25%">Date & Time</th>
+                        <th width="30%">Activity / Status</th>
+                        <th>Location / Facility</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="3" class="text-center p-5 text-muted">Retrieving audit logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <div class="mb-2"><strong>CONFIDENTIAL TRANSACTION RECORD</strong></div>
+            <p class="m-0">This document acts as an official history of the shipment lifecycle.<br>
+            WAB CARGO AND LOGISTICS SERVICES • "Moving Goods, Building Trust."</p>
+        </div>
+    </div>
+<script>
+    // 1. SUPABASE CONFIG
+    const SUPABASE_URL = 'https://pfgyfljvysxqsvuiehez.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZ3lmbGp2eXN4cXN2dWllaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MTcyNTMsImV4cCI6MjA4Mzk5MzI1M30.hIt_dGYpiQuKt_LJAfIZlBtnpY6HTt2Dn8xq1gRAXJU';
+
+    // SAFE INITIALIZATION: Prevents the "Already Declared" bug
+    var sbHistory;
+    if (typeof window.sbHistoryClient === 'undefined') {
+        window.sbHistoryClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    sbHistory = window.sbHistoryClient;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackId = urlParams.get('track');
+
+    // Set the report date immediately
+    document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
+
+    async function loadHistory() {
+        if(!trackId) {
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="3" class="text-center p-5 text-danger">Error: No Tracking ID provided.</td></tr>';
+            return;
+        }
+
+        try {
+            // 1. Get Shipment Info
+            const { data: shipment, error: sError } = await sbHistory
+                .from('shipments')
+                .select('*')
+                .eq('tracking_number', trackId)
+                .single();
+
+            if (sError) throw sError;
+
+            if(shipment) {
+                document.getElementById('trkDisplay').innerText = shipment.tracking_number;
+                document.getElementById('statusDisplay').innerText = shipment.status;
+                document.getElementById('originDisplay').innerText = shipment.origin;
+                document.getElementById('destDisplay').innerText = shipment.destination;
+            }
+
+            // 2. Get Events
+            const { data: events, error: eError } = await sbHistory
+                .from('shipment_events')
+                .select('*')
+                .eq('tracking_number', trackId)
+                .order('timestamp', { ascending: false });
+
+            if (eError) throw eError;
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if(events && events.length > 0) {
+                events.forEach(event => {
+                    const dateObj = new Date(event.timestamp || event.created_at);
+                    const dateStr = dateObj.toLocaleDateString();
+                    const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <strong class="text-dark">${dateStr}</strong><br>
+                                <span class="text-muted small">${timeStr}</span>
+                            </td>
+                            <td class="status-cell">
+                                <span class="status-dot"></span> ${event.status}
+                            </td>
+                            <td><i class="fas fa-map-marker-alt text-secondary me-2"></i> ${event.location}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-5 text-muted">No history events found.</td></tr>';
+            }
+        } catch (err) {
+            console.error("Critical Failure:", err);
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="3" class="text-center p-5 text-danger">Database Error: ${err.message}</td></tr>`;
+        }
+    }
+
+    // Run the loader
+    loadHistory();
+</script>
+</body>
+</html>

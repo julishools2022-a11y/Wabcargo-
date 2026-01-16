@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waybill | WAB Cargo</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+
+    <style>
+        :root {
+            --paper-bg: #ffffff;
+            --ink-color: #1a1a1a;
+            --accent-color: #000000;
+        }
+
+        body { 
+            background: #e0e5ec; 
+            padding: 40px 0 120px 0; 
+            font-family: 'Inter', sans-serif; 
+            color: var(--ink-color);
+        }
+        
+        /* --- THE WAYBILL (PAPER) --- */
+        .waybill-wrapper {
+            background: var(--paper-bg);
+            width: 100%;
+            max-width: 480px; /* Perfect Thermal Width */
+            margin: 0 auto;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Top "Hole" visual for realism */
+        .waybill-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -15px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 30px;
+            background: #e0e5ec;
+            border-radius: 50%;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* UTILS */
+        .b-bottom { border-bottom: 2px solid var(--ink-color); }
+        .b-right { border-right: 2px solid var(--ink-color); }
+        .text-mono { font-family: 'Courier New', monospace; letter-spacing: -0.5px; }
+        
+        /* HEADER */
+        .header-section { 
+            padding: 25px 20px; 
+            background: var(--accent-color); 
+            color: white; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .wab-logo { font-family: 'Oswald', sans-serif; font-size: 2.8rem; line-height: 0.8; letter-spacing: -1px; }
+        .wab-sub { font-size: 0.7rem; letter-spacing: 1px; opacity: 0.8; text-transform: uppercase; }
+        .priority-badge {
+            border: 2px solid white;
+            padding: 4px 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            transform: rotate(-5deg);
+        }
+
+        /* ROUTING CODES */
+        .routing-section { display: flex; text-align: center; border-bottom: 2px solid var(--ink-color); }
+        .route-box { flex: 1; padding: 15px 10px; position: relative; }
+        .big-code { font-family: 'Oswald', sans-serif; font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+        .small-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: #666; letter-spacing: 0.5px; }
+        
+        /* Direction Arrow */
+        .arrow-icon {
+            position: absolute;
+            top: 50%; left: 100%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid black;
+            border-radius: 50%;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+        }
+
+        /* ADDRESS GRID */
+        .address-grid { display: flex; border-bottom: 2px dashed #ccc; }
+        .addr-col { flex: 1; padding: 20px; font-size: 0.9rem; position: relative; }
+        .addr-tag { 
+            font-size: 0.6rem; font-weight: 900; 
+            background: #eee; color: #333; 
+            padding: 2px 8px; border-radius: 4px;
+            display: inline-block; margin-bottom: 8px;
+        }
+
+        /* BARCODE AREA */
+        .barcode-section { padding: 30px 20px; text-align: center; position: relative; }
+        .trk-text { font-family: 'Oswald', sans-serif; font-size: 1.5rem; letter-spacing: 2px; margin-top: 10px; display: block; font-weight: 500; }
+        
+        /* FOOTER */
+        .footer-legal {
+            background: #f8f9fa;
+            padding: 10px;
+            font-size: 0.6rem;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+
+        /* --- FLOATING ACTION BAR (GLASSMORPHISM) --- */
+        .action-bar-container {
+            position: fixed;
+            bottom: 30px;
+            left: 0; right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: none; /* Let clicks pass through empty space */
+        }
+
+        .action-bar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 8px 8px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.5);
+            display: flex;
+            gap: 12px;
+            pointer-events: auto;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .action-bar:hover { transform: translateY(-2px); }
+
+        .btn-action-main {
+            background: #111;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: 0.2s;
+        }
+        .btn-action-main:active { transform: scale(0.95); }
+
+        .btn-action-close {
+            background: #fff;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+            width: 46px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+        .btn-action-close:hover { background: #ffebee; }
+
+        /* --- MODAL DESIGN --- */
+        .modal-content {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px; }
+        .action-list-btn {
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            transition: 0.2s;
+            background: white;
+            width: 100%;
+            text-align: left;
+            display: flex; align-items: center;
+        }
+        .action-list-btn:hover {
+            background: #f8f9fa;
+            border-color: #000;
+            transform: translateX(5px);
+        }
+        .icon-box {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* PRINT SETTINGS */
+        @media print {
+            body { background: white; padding: 0; }
+            .waybill-wrapper { 
+                box-shadow: none; border: 2px solid #000; 
+                width: 100%; max-width: 100%; margin: 0; 
+                height: 100vh;
+            }
+            .no-print, .action-bar-container, .modal { display: none !important; }
+            /* Hide the "hole" graphic on print */
+            .waybill-wrapper::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="waybill-wrapper" id="printArea">
+        
+        <div class="header-section">
+            <div>
+                <div class="wab-logo">WAB</div>
+                <div class="wab-sub">Cargo & Logistics Services</div>
+            </div>
+            <div class="priority-badge">PRIORITY</div>
+        </div>
+
+        <div class="routing-section">
+            <div class="route-box b-right">
+                <div class="small-label">ORIGIN AIRPORT</div>
+                <div class="big-code" id="originCode">...</div>
+                <div id="originFull" class="fw-bold small text-muted">...</div>
+                
+                <div class="arrow-icon"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="route-box">
+                <div class="small-label">DESTINATION AIRPORT</div>
+                <div class="big-code" id="destCode">...</div>
+                <div id="destFull" class="fw-bold small text-muted">...</div>
+            </div>
+        </div>
+
+        <div class="address-grid">
+            <div class="addr-col b-right">
+                <div class="addr-tag">FROM (SENDER)</div>
+                <div class="fw-bold text-uppercase mb-1">WAB Cargo Ops</div>
+                <div id="originText" class="text-muted small" style="line-height: 1.4;">...</div>
+            </div>
+            <div class="addr-col">
+                <div class="addr-tag">TO (RECEIVER)</div>
+                <div class="fw-bold text-uppercase mb-1">Valued Customer</div>
+                <div id="destText" class="text-muted small" style="line-height: 1.4;">...</div>
+            </div>
+        </div>
+
+        <div class="d-flex border-bottom border-dark">
+            <div class="p-3 flex-fill border-end border-dark text-center">
+                <div class="small-label">DATE</div>
+                <div class="fw-bold" id="dateDisplay">...</div>
+            </div>
+            <div class="p-3 flex-fill border-end border-dark text-center">
+                <div class="small-label">WEIGHT</div>
+                <div class="fw-bold">-- KG</div>
+            </div>
+            <div class="p-3 flex-fill text-center">
+                <div class="small-label">SERVICE</div>
+                <div class="fw-bold">STD</div>
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <svg id="barcode"></svg>
+            <span class="trk-text" id="trkNumDisplay">...</span>
+        </div>
+
+        <div class="footer-legal">
+            <div class="d-flex justify-content-between align-items-end px-3">
+                <div class="text-start">
+                    Authorized Signature<br>
+                    _______________________
+                </div>
+                <div class="text-end opacity-50">
+                    <i class="fas fa-qrcode fa-2x"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                Subject to Standard Trading Conditions. "Moving Goods, Building Trust."
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar-container no-print">
+        <div class="action-bar">
+            <button class="btn-action-main" onclick="openMenu()">
+                <i class="fas fa-layer-group"></i> ACTIONS
+            </button>
+            <button class="btn-action-close" onclick="window.close()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="actionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold text-uppercase ls-1">Select Option</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3 bg-light">
+                    <div class="d-grid gap-2">
+                        
+                        <button onclick="window.print()" class="action-list-btn">
+                            <div class="icon-box text-dark"><i class="fas fa-print"></i></div>
+                            <div>
+                                <div class="fw-bold text-dark">Print Label</div>
+                                <small class="text-muted" style="font-size: 0.7rem;">Thermal or PDF</small>
+                            </div>
+                        </button>
+                        
+                        <button onclick="shareLink()" class="action-list-btn">
+                            <div class="icon-box text-success"><i class="fab fa-whatsapp"></i></div>
+                            <div>
+                                <div class="fw-bold text-dark">Share Tracking</div>
+                                <small class="text-muted" style="font-size: 0.7rem;">Send to Client</small>
+                            </div>
+                        </button>
+                        
+                        <button onclick="copyLink()" class="action-list-btn">
+                            <div class="icon-box text-primary"><i class="fas fa-link"></i></div>
+                            <div>
+                                <div class="fw-bold text-dark">Copy Link</div>
+                                <small class="text-muted" style="font-size: 0.7rem;">To Clipboard</small>
+                            </div>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 1. SAFE CONFIGURATION
+    const SUPABASE_URL = 'https://pfgyfljvysxqsvuiehez.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZ3lmbGp2eXN4cXN2dWllaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MTcyNTMsImV4cCI6MjA4Mzk5MzI1M30.hIt_dGYpiQuKt_LJAfIZlBtnpY6HTt2Dn8xq1gRAXJU';
+
+    // FIX: Check if already declared to prevent the SyntaxError crash
+    var sbWaybill;
+    if (typeof window.sbWaybillClient === 'undefined') {
+        window.sbWaybillClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    sbWaybill = window.sbWaybillClient;
+
+    // 2. LOGIC
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackId = urlParams.get('track');
+
+    function openMenu() {
+        new bootstrap.Modal(document.getElementById('actionModal')).show();
+    }
+
+    async function loadData() {
+        if(!trackId) return;
+
+        try {
+            const { data, error } = await sbWaybill
+                .from('shipments')
+                .select('*')
+                .eq('tracking_number', trackId)
+                .single();
+
+            if (error) throw error;
+
+            if(data) {
+                document.getElementById('originFull').innerText = data.origin;
+                document.getElementById('originText').innerText = data.origin;
+                document.getElementById('destFull').innerText = data.destination;
+                document.getElementById('destText').innerText = data.destination;
+                document.getElementById('trkNumDisplay').innerText = data.tracking_number;
+                
+                // Smart Codes (First 3 letters)
+                document.getElementById('originCode').innerText = data.origin.substring(0,3).toUpperCase();
+                document.getElementById('destCode').innerText = data.destination.substring(0,3).toUpperCase();
+
+                // Date
+                const d = new Date(data.created_at || new Date());
+                document.getElementById('dateDisplay').innerText = d.toLocaleDateString();
+
+                // Generate High-Res Barcode
+                JsBarcode("#barcode", data.tracking_number, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 2,
+                    height: 50,
+                    displayValue: false,
+                    margin: 0
+                });
+            }
+        } catch (err) {
+            console.error("Waybill Load Error:", err);
+        }
+    }
+    
+    // Run data load
+    loadData();
+
+    // Helper functions
+    function copyLink(link) {
+        const text = link || window.location.href;
+        navigator.clipboard.writeText(text);
+        alert("Link Copied!");
+    }
+
+    async function shareLink() {
+        const trackingLink = window.location.href; 
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'WAB Cargo Receipt',
+                    text: `Tracking Number: ${trackId}`,
+                    url: trackingLink
+                });
+            } catch (err) { console.log(err); }
+        } else {
+            copyLink(trackingLink);
+        }
+    }
+</script>
+
+</body>
+</html>
