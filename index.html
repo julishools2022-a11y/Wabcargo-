@@ -11,213 +11,76 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        :root {
-            --black: #050505;
-            --charcoal: #1a1a1a;
-            --white: #ffffff;
-            --gray-light: #f4f4f4;
-        }
+        :root { --black: #050505; --charcoal: #1a1a1a; --white: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--charcoal); overflow-x: hidden; }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--white); 
-            color: var(--charcoal); 
-            overflow-x: hidden; 
-        }
-
-        /* --- UTILITIES --- */
+        /* UTILITIES */
         .font-industrial { font-family: 'Archivo Black', sans-serif; letter-spacing: -2px; text-transform: uppercase; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* --- NAVBAR --- */
-        .navbar { 
-            background: rgba(5, 5, 5, 0.95); 
-            backdrop-filter: blur(10px); 
-            padding: 15px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .navbar-brand { font-size: 1.5rem; color: white !important; }
-        .nav-link { 
-            color: #888 !important; font-weight: 600; font-size: 0.8rem; 
-            text-transform: uppercase; letter-spacing: 1px; margin: 0 10px; transition: 0.3s; 
-        }
+        /* NAVBAR (Hidden Login Logic) */
+        .navbar { background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(10px); padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .navbar-brand { font-size: 1.5rem; color: white !important; cursor: pointer; user-select: none; }
+        .nav-link { color: #888 !important; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin: 0 10px; transition: 0.3s; }
         .nav-link:hover { color: white !important; }
-        
-        .btn-login {
-            background: white; color: black; border: none; 
-            padding: 8px 20px; font-weight: 800; font-size: 0.8rem; 
-            text-transform: uppercase; border-radius: 0; transition: 0.3s;
-            text-decoration: none;
-        }
-        .btn-login:hover { background: #ccc; }
-
         .navbar-toggler { border: none; outline: none; box-shadow: none; background: white; }
         .navbar-collapse { background: black; padding: 20px; text-align: center; }
 
-        /* --- HERO SECTION --- */
+        /* HERO */
         .hero-section {
             background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1950&q=80');
             background-size: cover; background-position: center; background-attachment: fixed;
-            min-height: 100vh; min-height: 100dvh; /* Full screen fix */
-            display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; text-align: center;
-            color: white; padding: 80px 20px; position: relative;
+            min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 80px 20px;
         }
+        .hero-title { font-size: clamp(3rem, 10vw, 6rem); line-height: 0.9; margin-bottom: 15px; position: relative; z-index: 2; }
+        .hero-sub { font-size: clamp(1rem, 3vw, 1.25rem); font-weight: 300; opacity: 0.8; margin-bottom: 40px; position: relative; z-index: 2; }
 
-        /* Diagonal Texture Overlay */
-        .hero-section::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 10px);
-            pointer-events: none;
-        }
+        /* TRACKING */
+        .tracking-container { width: 100%; max-width: 700px; position: relative; z-index: 10; margin-bottom: -100px; }
+        .tracking-box { background: white; padding: 15px; display: flex; gap: 10px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); border: 1px solid rgba(0,0,0,0.1); }
+        .track-input { border: 2px solid #eee; background: #f9f9f9; flex-grow: 1; padding: 20px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: black; text-transform: uppercase; width: 100%; }
+        .track-btn { background: black; color: white; border: none; padding: 0 50px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; white-space: nowrap; }
+        @media (max-width: 768px) { .tracking-box { flex-direction: column; padding: 20px; } .track-btn { padding: 20px; width: 100%; } .tracking-container { margin-bottom: -50px; } }
 
-        .hero-badge {
-            border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px;
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
-            margin-bottom: 20px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-        }
-
-        .hero-title { 
-            font-size: clamp(3rem, 10vw, 6rem); 
-            line-height: 0.9; margin-bottom: 15px; position: relative; z-index: 2; 
-        }
-        .hero-sub { 
-            font-size: clamp(1rem, 3vw, 1.25rem); 
-            font-weight: 300; opacity: 0.8; margin-bottom: 40px; max-width: 600px; position: relative; z-index: 2; 
-        }
-
-        /* --- TRACKING WIDGET --- */
-        .tracking-container {
-            width: 100%; max-width: 700px; position: relative; z-index: 10;
-            margin-bottom: -100px; 
-        }
-        .tracking-box {
-            background: white; padding: 15px;
-            display: flex; gap: 10px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        .track-input {
-            border: 2px solid #eee; background: #f9f9f9; flex-grow: 1; 
-            padding: 20px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; 
-            font-weight: 700; color: black; text-transform: uppercase;
-            width: 100%;
-        }
-        .track-input:focus { outline: none; border-color: black; background: white; }
-        .track-btn {
-            background: black; color: white; border: none; padding: 0 50px;
-            font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-            transition: 0.3s; white-space: nowrap;
-        }
-        .track-btn:hover { background: #333; }
-
-        @media (max-width: 768px) {
-            .tracking-box { flex-direction: column; padding: 20px; }
-            .track-btn { padding: 20px; width: 100%; }
-            .tracking-container { margin-bottom: -50px; }
-        }
-
-        /* --- MANIFEST RESULT CARD --- */
+        /* MANIFEST CARD */
         .result-wrapper { display: none; margin: 120px auto 50px; max-width: 800px; padding: 0 20px; }
-        .manifest-card {
-            background: white; border: 2px solid black; 
-            box-shadow: 15px 15px 0 rgba(0,0,0,0.1);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .manifest-header {
-            background: black; color: white; padding: 20px 30px;
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-        }
-        .status-badge {
-            background: white; color: black; padding: 5px 15px; 
-            font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.8rem;
-        }
-        
+        .manifest-card { background: white; border: 2px solid black; box-shadow: 15px 15px 0 rgba(0,0,0,0.1); animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .manifest-header { background: black; color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .status-badge { background: white; color: black; padding: 5px 15px; font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.8rem; }
         .manifest-grid { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid black; }
-        .manifest-cell { padding: 30px; border-right: 2px solid black; }
-        .manifest-cell:last-child { border-right: none; }
-        
-        @media(max-width: 576px) {
-            .manifest-grid { grid-template-columns: 1fr; }
-            .manifest-cell { border-right: none; border-bottom: 2px solid black; padding: 20px; }
-        }
-
+        .manifest-cell { padding: 30px; border-right: 2px solid black; } .manifest-cell:last-child { border-right: none; }
+        @media(max-width: 576px) { .manifest-grid { grid-template-columns: 1fr; } .manifest-cell { border-right: none; border-bottom: 2px solid black; padding: 20px; } }
         .label-mono { font-size: 0.7rem; text-transform: uppercase; color: #888; display: block; margin-bottom: 5px; font-weight: 700; }
         .value-text { font-size: 1.5rem; font-weight: 800; font-family: 'Archivo Black'; line-height: 1; word-wrap: break-word; }
 
-        /* --- SERVICES SECTION --- */
+        /* SERVICES */
         .services-section { padding: 120px 0 80px; background: var(--white); }
-        .section-header { text-align: center; margin-bottom: 60px; }
-        .service-card {
-            padding: 40px 30px; background: white; border: 1px solid #eee;
-            height: 100%; transition: 0.4s; position: relative; overflow: hidden;
-        }
-        .service-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 0%;
-            background: black; transition: 0.4s; z-index: 0;
-        }
+        .service-card { padding: 40px 30px; background: white; border: 1px solid #eee; height: 100%; transition: 0.4s; position: relative; overflow: hidden; }
+        .service-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: black; transition: 0.4s; z-index: 0; }
         .service-card:hover::before { height: 100%; }
         .service-card:hover * { color: white !important; position: relative; z-index: 1; }
-        
         .service-icon { font-size: 2.5rem; margin-bottom: 25px; color: black; }
         .service-title { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 10px; color: black; }
         .service-desc { font-size: 0.9rem; color: #666; line-height: 1.6; }
 
-        /* --- CTA SECTION --- */
+        /* CTA & FOOTER */
         .cta-section { background: black; color: white; padding: 100px 20px; text-align: center; }
-        
-        /* FIXED BUTTON STYLE: Transparent with White Border */
-        .btn-outline-white {
-            background: transparent;
-            border: 3px solid white; 
-            color: white; 
-            padding: 18px 60px;
-            font-weight: 900; 
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-            display: inline-block; 
-            margin-top: 30px; 
-            text-decoration: none; 
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .btn-outline-white:hover { 
-            background: white; 
-            color: black; 
-        }
-
-        /* --- FOOTER --- */
+        .btn-outline-white { background: transparent; border: 3px solid white; color: white; padding: 18px 60px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; display: inline-block; margin-top: 30px; text-decoration: none; transition: 0.3s; cursor: pointer; }
+        .btn-outline-white:hover { background: white; color: black; }
         .footer { background: #0a0a0a; color: #444; padding: 80px 0 40px; }
         .footer h5 { color: white; font-family: 'Archivo Black'; margin-bottom: 20px; }
         .footer a { color: #666; text-decoration: none; transition: 0.3s; }
         .footer a:hover { color: white; }
 
-        /* --- TIMELINE --- */
-        .timeline-box { padding: 30px; }
+        /* TIMELINE & MODAL */
         .timeline { border-left: 4px solid black; margin-left: 10px; padding-left: 35px; }
         .timeline-item { position: relative; margin-bottom: 35px; }
-        .timeline-dot {
-            width: 20px; height: 20px; background: black; position: absolute; 
-            left: -47px; top: 3px; border: 4px solid white; outline: 2px solid black;
-        }
+        .timeline-dot { width: 20px; height: 20px; background: black; position: absolute; left: -47px; top: 3px; border: 4px solid white; outline: 2px solid black; }
         .timeline-item.latest .timeline-dot { background: white; border: 4px solid black; transform: scale(1.2); }
-
-        /* --- INDUSTRIAL MODAL --- */
         .modal-content { border-radius: 0; border: 4px solid black; box-shadow: 20px 20px 0 rgba(0,0,0,0.2); }
         .modal-header { background: black; color: white; border: none; border-radius: 0; padding: 20px 30px; }
         .form-control, .form-select { border-radius: 0; border: 2px solid #ddd; padding: 12px; font-weight: 600; }
-        .form-control:focus { border-color: black; box-shadow: none; }
-        
-        .btn-quote-submit { 
-            background: black; 
-            color: white; 
-            border: 2px solid black; 
-            padding: 15px; 
-            font-weight: 900; 
-            width: 100%; 
-            text-transform: uppercase; 
-            transition: 0.3s; 
-        }
+        .btn-quote-submit { background: black; color: white; border: 2px solid black; padding: 15px; font-weight: 900; width: 100%; text-transform: uppercase; transition: 0.3s; }
         .btn-quote-submit:hover { background: white; color: black; }
         
         @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
@@ -229,7 +92,9 @@
 
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark">
         <div class="container">
-            <a class="navbar-brand font-industrial" href="#"> WAB<span style="color:#666">CARGO</span></a>
+            <a class="navbar-brand font-industrial" href="#" ondblclick="window.location.href='login.html'" title="Double Tap for Admin"> 
+                WAB<span style="color:#666">CARGO</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -238,7 +103,6 @@
                     <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="openQuoteModal()">Get Quote</a></li>
-                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0"><a class="btn-login" href="login.html">LOGIN</a></li>
                 </ul>
             </div>
         </div>
@@ -287,7 +151,7 @@
 
     <div class="services-section" id="services">
         <div class="container">
-            <div class="section-header">
+            <div class="text-center mb-5">
                 <h2 class="font-industrial" style="font-size: clamp(2rem, 5vw, 3rem);">OUR CAPABILITIES</h2>
                 <div style="width: 50px; height: 5px; background: black; margin: 20px auto;"></div>
             </div>
@@ -417,61 +281,43 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 1. SAFE INIT
+        // SAFE INIT
         var SB_URL = 'https://pfgyfljvysxqsvuiehez.supabase.co';
         var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZ3lmbGp2eXN4cXN2dWllaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MTcyNTMsImV4cCI6MjA4Mzk5MzI1M30.hIt_dGYpiQuKt_LJAfIZlBtnpY6HTt2Dn8xq1gRAXJU';
-        
         if (typeof window.sbHome === 'undefined') { window.sbHome = window.supabase.createClient(SB_URL, SB_KEY); }
         var sb = window.sbHome;
 
-        // --- QUOTE LOGIC (Decoded) ---
+        // QUOTE LOGIC
         function openQuoteModal() { new bootstrap.Modal(document.getElementById('quoteModal')).show(); }
         
         async function submitQuote(e) {
             e.preventDefault();
-            
             const btn = document.querySelector('.btn-quote-submit');
             const originalText = btn.innerText;
-            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
             btn.disabled = true;
 
-            // Capture Data using explicit IDs
             const name = document.getElementById('quoteName').value;
             const phone = document.getElementById('quotePhone').value;
             const service = document.getElementById('quoteService').value;
             const details = document.getElementById('quoteDetails').value;
 
             try {
-                // Send to Supabase Table: quote_requests
                 const { error } = await sb.from('quote_requests').insert([{
-                    full_name: name,
-                    phone: phone,
-                    service_type: service,
-                    details: details
+                    full_name: name, phone: phone, service_type: service, details: details
                 }]);
-
                 if (error) throw error;
-
                 alert("✅ Request Sent! WAB Cargo will contact you shortly.");
-                
-                // Close Modal Correctly
-                const modalEl = document.getElementById('quoteModal');
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                modalInstance.hide();
-                
-                e.target.reset(); // Clear form
-
+                bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
+                e.target.reset(); 
             } catch (err) {
-                console.error("Submission Error:", err);
-                alert("Error sending request: " + err.message);
+                console.error(err); alert("Error sending request: " + err.message);
             } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.innerText = originalText; btn.disabled = false;
             }
         }
 
-        // --- TRACKING LOGIC ---
+        // TRACKING LOGIC
         function handleEnter(e) { if(e.key === 'Enter') runSearch(); }
 
         async function runSearch() {
