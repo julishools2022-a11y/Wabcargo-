@@ -396,39 +396,50 @@
 
         function openQuoteModal() { new bootstrap.Modal(document.getElementById('quoteModal')).show(); }
                 async function submitQuote(e) {
-            e.preventDefault();
-            
-            const btn = document.querySelector('.btn-quote-submit');
-            const originalText = btn.innerText;
-            btn.innerHTML = "SENDING...";
-            btn.disabled = true;
+    e.preventDefault();
+    
+    const btn = document.querySelector('.btn-quote-submit');
+    const originalText = btn.innerText;
+    
+    // UI Feedback
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
+    btn.disabled = true;
 
-            const name = document.querySelector('input[type="text"]').value;
-            const phone = document.querySelector('input[type="tel"]').value;
-            const service = document.getElementById('quoteService').value;
-            const details = document.querySelector('textarea').value;
+    // Capture Data using ID selectors
+    const name = document.getElementById('quoteName').value;
+    const phone = document.getElementById('quotePhone').value;
+    const service = document.getElementById('quoteService').value;
+    const details = document.getElementById('quoteDetails').value;
 
-            try {
-                const { error } = await sb.from('quote_requests').insert([{
-                    full_name: name,
-                    phone: phone,
-                    service_type: service,
-                    details: details
-                }]);
+    try {
+        // Send to Supabase Table: quote_requests
+        const { error } = await sb.from('quote_requests').insert([{
+            full_name: name,
+            phone: phone,
+            service_type: service,
+            details: details
+        }]);
 
-                if (error) throw error;
+        if (error) throw error;
 
-                alert("✅ Request Sent! We will contact you shortly.");
-                bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
-                e.target.reset(); // Clear form
+        alert("✅ Request Sent! WAB Cargo will contact you shortly.");
+        
+        // Close Modal
+        const modalEl = document.getElementById('quoteModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        modalInstance.hide();
+        
+        e.target.reset(); // Clear form
 
-            } catch (err) {
-                alert("Error sending request: " + err.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+    } catch (err) {
+        console.error("Submission Error:", err);
+        alert("Error sending request: " + err.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
                 }
+        
         
         function handleEnter(e) { if(e.key === 'Enter') runSearch(); }
 
