@@ -42,28 +42,29 @@
             text-transform: uppercase; letter-spacing: 1px; margin: 0 10px; transition: 0.3s; 
         }
         .nav-link:hover { color: white !important; }
+        
         .btn-login {
             background: white; color: black; border: none; 
             padding: 8px 20px; font-weight: 800; font-size: 0.8rem; 
             text-transform: uppercase; border-radius: 0; transition: 0.3s;
+            text-decoration: none;
         }
-        
-        /* Mobile Menu Fixes */
-        .navbar-toggler { border: none; outline: none; box-shadow: none; }
+        .btn-login:hover { background: #ccc; }
+
+        .navbar-toggler { border: none; outline: none; box-shadow: none; background: white; }
         .navbar-collapse { background: black; padding: 20px; text-align: center; }
 
-        /* --- HERO SECTION (FULL SCREEN FIX) --- */
+        /* --- HERO SECTION --- */
         .hero-section {
             background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1950&q=80');
             background-size: cover; background-position: center; background-attachment: fixed;
-            /* 100dvh accounts for mobile browser address bars */
-            min-height: 100vh; min-height: 100dvh; 
+            min-height: 100vh; min-height: 100dvh; /* Full screen fix */
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center; text-align: center;
             color: white; padding: 80px 20px; position: relative;
         }
 
-        /* Diagonal Texture */
+        /* Diagonal Texture Overlay */
         .hero-section::after {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 10px);
@@ -76,9 +77,8 @@
             margin-bottom: 20px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
         }
 
-        /* Responsive Font Scaling */
         .hero-title { 
-            font-size: clamp(3rem, 10vw, 6rem); /* Scales smoothly */
+            font-size: clamp(3rem, 10vw, 6rem); 
             line-height: 0.9; margin-bottom: 15px; position: relative; z-index: 2; 
         }
         .hero-sub { 
@@ -86,10 +86,10 @@
             font-weight: 300; opacity: 0.8; margin-bottom: 40px; max-width: 600px; position: relative; z-index: 2; 
         }
 
-        /* --- RESPONSIVE TRACKING WIDGET --- */
+        /* --- TRACKING WIDGET --- */
         .tracking-container {
             width: 100%; max-width: 700px; position: relative; z-index: 10;
-            margin-bottom: -100px; /* Pulls overlapping content */
+            margin-bottom: -100px; 
         }
         .tracking-box {
             background: white; padding: 15px;
@@ -101,7 +101,7 @@
             border: 2px solid #eee; background: #f9f9f9; flex-grow: 1; 
             padding: 20px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; 
             font-weight: 700; color: black; text-transform: uppercase;
-            width: 100%; /* Full width on mobile */
+            width: 100%;
         }
         .track-input:focus { outline: none; border-color: black; background: white; }
         .track-btn {
@@ -111,7 +111,6 @@
         }
         .track-btn:hover { background: #333; }
 
-        /* MOBILE ADJUSTMENTS FOR TRACKING */
         @media (max-width: 768px) {
             .tracking-box { flex-direction: column; padding: 20px; }
             .track-btn { padding: 20px; width: 100%; }
@@ -164,15 +163,28 @@
         .service-title { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 10px; color: black; }
         .service-desc { font-size: 0.9rem; color: #666; line-height: 1.6; }
 
-        /* --- CTA --- */
+        /* --- CTA SECTION --- */
         .cta-section { background: black; color: white; padding: 100px 20px; text-align: center; }
+        
+        /* FIXED BUTTON STYLE: Transparent with White Border */
         .btn-outline-white {
             background: transparent;
-            border: 3px solid white; color: white; padding: 18px 60px;
-            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
-            display: inline-block; margin-top: 30px; text-decoration: none; transition: 0.3s;
+            border: 3px solid white; 
+            color: white; 
+            padding: 18px 60px;
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            display: inline-block; 
+            margin-top: 30px; 
+            text-decoration: none; 
+            transition: 0.3s;
+            cursor: pointer;
         }
-        .btn-outline-white:hover { background: white; color: black; }
+        .btn-outline-white:hover { 
+            background: white; 
+            color: black; 
+        }
 
         /* --- FOOTER --- */
         .footer { background: #0a0a0a; color: #444; padding: 80px 0 40px; }
@@ -195,7 +207,17 @@
         .modal-header { background: black; color: white; border: none; border-radius: 0; padding: 20px 30px; }
         .form-control, .form-select { border-radius: 0; border: 2px solid #ddd; padding: 12px; font-weight: 600; }
         .form-control:focus { border-color: black; box-shadow: none; }
-        .btn-quote-submit { background: black; color: white; border: 2px solid black; padding: 15px; font-weight: 900; width: 100%; text-transform: uppercase; transition: 0.3s; }
+        
+        .btn-quote-submit { 
+            background: black; 
+            color: white; 
+            border: 2px solid black; 
+            padding: 15px; 
+            font-weight: 900; 
+            width: 100%; 
+            text-transform: uppercase; 
+            transition: 0.3s; 
+        }
         .btn-quote-submit:hover { background: white; color: black; }
         
         @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
@@ -207,7 +229,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark">
         <div class="container">
-            <a class="navbar-brand font-industrial" href="#" ondblclick="window.location.href='signin.html'"> WAB<span style="color:#666">CARGO</span></a>
+            <a class="navbar-brand font-industrial" href="#"> WAB<span style="color:#666">CARGO</span></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -216,7 +238,7 @@
                     <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="openQuoteModal()">Get Quote</a></li>
-                    
+                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0"><a class="btn-login" href="login.html">LOGIN</a></li>
                 </ul>
             </div>
         </div>
@@ -338,7 +360,6 @@
                         <li class="mb-2"><a href="#">Home</a></li>
                         <li class="mb-2"><a href="#services">Services</a></li>
                         <li class="mb-2"><a href="#">Tracking</a></li>
-                        
                     </ul>
                 </div>
                 <div class="col-lg-4 col-6">
@@ -364,7 +385,15 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 p-md-5">
-                    <form onsubmit="submitQuote(event)">
+                    <form id="quoteForm" onsubmit="submitQuote(event)">
+                        <div class="mb-3">
+                            <label class="font-mono small fw-bold mb-1">FULL NAME</label>
+                            <input type="text" id="quoteName" class="form-control" placeholder="Enter your name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="font-mono small fw-bold mb-1">PHONE NUMBER</label>
+                            <input type="tel" id="quotePhone" class="form-control" placeholder="Enter phone number" required>
+                        </div>
                         <div class="mb-3">
                             <label class="font-mono small fw-bold mb-1">SERVICE TYPE</label>
                             <select class="form-select" id="quoteService">
@@ -377,9 +406,9 @@
                         </div>
                         <div class="mb-4">
                             <label class="font-mono small fw-bold mb-1">DETAILS</label>
-                            <textarea class="form-control" rows="3" placeholder="Description of goods..." required></textarea>
+                            <textarea id="quoteDetails" class="form-control" rows="3" placeholder="Description of goods..." required></textarea>
                         </div>
-                        <button class="btn-quote-submit">SUBMIT REQUEST</button>
+                        <button type="submit" class="btn-quote-submit">SUBMIT REQUEST</button>
                     </form>
                 </div>
             </div>
@@ -391,56 +420,58 @@
         // 1. SAFE INIT
         var SB_URL = 'https://pfgyfljvysxqsvuiehez.supabase.co';
         var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmZ3lmbGp2eXN4cXN2dWllaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MTcyNTMsImV4cCI6MjA4Mzk5MzI1M30.hIt_dGYpiQuKt_LJAfIZlBtnpY6HTt2Dn8xq1gRAXJU';
+        
         if (typeof window.sbHome === 'undefined') { window.sbHome = window.supabase.createClient(SB_URL, SB_KEY); }
         var sb = window.sbHome;
 
+        // --- QUOTE LOGIC (Decoded) ---
         function openQuoteModal() { new bootstrap.Modal(document.getElementById('quoteModal')).show(); }
-                async function submitQuote(e) {
-    e.preventDefault();
-    
-    const btn = document.querySelector('.btn-quote-submit');
-    const originalText = btn.innerText;
-    
-    // UI Feedback
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
-    btn.disabled = true;
-
-    // Capture Data using ID selectors
-    const name = document.getElementById('quoteName').value;
-    const phone = document.getElementById('quotePhone').value;
-    const service = document.getElementById('quoteService').value;
-    const details = document.getElementById('quoteDetails').value;
-
-    try {
-        // Send to Supabase Table: quote_requests
-        const { error } = await sb.from('quote_requests').insert([{
-            full_name: name,
-            phone: phone,
-            service_type: service,
-            details: details
-        }]);
-
-        if (error) throw error;
-
-        alert("✅ Request Sent! WAB Cargo will contact you shortly.");
         
-        // Close Modal
-        const modalEl = document.getElementById('quoteModal');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        modalInstance.hide();
-        
-        e.target.reset(); // Clear form
+        async function submitQuote(e) {
+            e.preventDefault();
+            
+            const btn = document.querySelector('.btn-quote-submit');
+            const originalText = btn.innerText;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
+            btn.disabled = true;
 
-    } catch (err) {
-        console.error("Submission Error:", err);
-        alert("Error sending request: " + err.message);
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-                }
-        
-        
+            // Capture Data using explicit IDs
+            const name = document.getElementById('quoteName').value;
+            const phone = document.getElementById('quotePhone').value;
+            const service = document.getElementById('quoteService').value;
+            const details = document.getElementById('quoteDetails').value;
+
+            try {
+                // Send to Supabase Table: quote_requests
+                const { error } = await sb.from('quote_requests').insert([{
+                    full_name: name,
+                    phone: phone,
+                    service_type: service,
+                    details: details
+                }]);
+
+                if (error) throw error;
+
+                alert("✅ Request Sent! WAB Cargo will contact you shortly.");
+                
+                // Close Modal Correctly
+                const modalEl = document.getElementById('quoteModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                modalInstance.hide();
+                
+                e.target.reset(); // Clear form
+
+            } catch (err) {
+                console.error("Submission Error:", err);
+                alert("Error sending request: " + err.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- TRACKING LOGIC ---
         function handleEnter(e) { if(e.key === 'Enter') runSearch(); }
 
         async function runSearch() {
@@ -496,6 +527,3 @@
     </script>
 </body>
 </html>
-        
-
-        
