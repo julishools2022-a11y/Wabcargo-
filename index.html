@@ -395,12 +395,41 @@
         var sb = window.sbHome;
 
         function openQuoteModal() { new bootstrap.Modal(document.getElementById('quoteModal')).show(); }
-        function submitQuote(e) {
+                async function submitQuote(e) {
             e.preventDefault();
-            alert("Quote Request Received.");
-            bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
-        }
+            
+            const btn = document.querySelector('.btn-quote-submit');
+            const originalText = btn.innerText;
+            btn.innerHTML = "SENDING...";
+            btn.disabled = true;
 
+            const name = document.querySelector('input[type="text"]').value;
+            const phone = document.querySelector('input[type="tel"]').value;
+            const service = document.getElementById('quoteService').value;
+            const details = document.querySelector('textarea').value;
+
+            try {
+                const { error } = await sb.from('quote_requests').insert([{
+                    full_name: name,
+                    phone: phone,
+                    service_type: service,
+                    details: details
+                }]);
+
+                if (error) throw error;
+
+                alert("✅ Request Sent! We will contact you shortly.");
+                bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
+                e.target.reset(); // Clear form
+
+            } catch (err) {
+                alert("Error sending request: " + err.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+                }
+        
         function handleEnter(e) { if(e.key === 'Enter') runSearch(); }
 
         async function runSearch() {
