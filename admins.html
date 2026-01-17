@@ -103,6 +103,12 @@
                         <i class="fas fa-file-invoice-dollar me-1"></i> Transactions
                     </a>
                 </li>
+                <li class="nav-item">
+    <a class="nav-link" href="#" onclick="openQuotesModal()">
+        <i class="fas fa-envelope-open-text me-1"></i> Quotes
+    </a>
+                </li>
+                
             </ul>
 
             <div class="d-flex align-items-center border-start ps-lg-3 ms-lg-3 mt-3 mt-lg-0">
@@ -204,6 +210,36 @@
         </div>
     </div>
 </div>
+    <div class="modal fade" id="quotesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-inbox me-2"></i> Quote Requests</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light sticky-top">
+                            <tr class="small text-muted text-uppercase">
+                                <th class="ps-4">Date</th>
+                                <th>Client</th>
+                                <th>Service</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotesTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button class="btn btn-sm btn-outline-dark" onclick="fetchQuotes()">Refresh Inbox</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -378,6 +414,50 @@ checkSession();
         alert("❌ Update failed: " + err.message);
     }
 }
+    // OPEN QUOTES MODAL
+function openQuotesModal() {
+    new bootstrap.Modal(document.getElementById('quotesModal')).show();
+    fetchQuotes();
+}
+
+// FETCH QUOTES FROM DATABASE
+async function fetchQuotes() {
+    const tbody = document.getElementById('quotesTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">Loading messages...</td></tr>';
+
+    const { data, error } = await supabaseAdmin
+        .from('quote_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger p-4">${error.message}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-muted">No new quote requests.</td></tr>';
+        return;
+    }
+
+    data.forEach(q => {
+        const date = new Date(q.created_at).toLocaleDateString();
+        tbody.innerHTML += `
+            <tr>
+                <td class="ps-4 small text-muted">${date}</td>
+                <td>
+                    <div class="fw-bold">${q.full_name}</div>
+                    <div class="small text-primary"><i class="fas fa-phone me-1"></i> ${q.phone}</div>
+                </td>
+                <td><span class="badge bg-secondary">${q.service_type}</span></td>
+                <td class="small text-muted" style="max-width: 200px;">${q.details}</td>
+            </tr>
+        `;
+    });
+                                                                         }
+    
 </script>
 
 </body>
